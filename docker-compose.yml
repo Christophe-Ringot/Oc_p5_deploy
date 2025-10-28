@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:14.19-alpine3.21
+    container_name: local_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - local_pgdata:/var/lib/postgresql/data
+    networks:
+      - bdd-network
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - .env
+
+  pgadmin:
+    depends_on:
+      - db
+    image: elestio/pgadmin:REL-9_8
+    container_name: pgadmin4_container
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - bdd-network
+    env_file:
+      - .env
+
+volumes:
+  local_pgdata:
+  pgadmin_data:
+
+networks:
+  bdd-network:
