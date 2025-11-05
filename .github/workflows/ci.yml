@@ -1,0 +1,51 @@
+name: pipeline CI
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14.19-alpine3.21
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+
+    steps:
+      - name: Récupération de notre application
+        uses: actions/checkout@v4
+
+      - name: Installation des dépendances
+        run: pip install -r requirements.txt
+
+      - name: Création de la bdd
+        run: python data/create_db.py
+
+      - name: lancement des tests
+        run: pytest tests/ -v --cov-report=html
+
+      - name: artefact rapport html
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-cov
+          path: htmlcov/
