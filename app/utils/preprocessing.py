@@ -56,6 +56,10 @@ def preprocess_input(eval_df, sirh_df, sondage_df):
         X: DataFrame prêt pour pipeline.predict()
     """
 
+    # VALIDATION PRÉCOCE: Vérifier si les DataFrames sont vides
+    if eval_df.empty or sirh_df.empty or sondage_df.empty:
+        return pd.DataFrame()
+
     # ÉTAPE 1: Renommer les colonnes (fix typos)
     sirh_df = sirh_df.rename(columns={
         'nombre_heures_travailless': 'nombre_heures_travaillees',
@@ -71,12 +75,16 @@ def preprocess_input(eval_df, sirh_df, sondage_df):
     })
 
     # ÉTAPE 2: Créer les ID pour le merge
-    eval_df['id_employee'] = eval_df['eval_number'].astype(str).str.extract('(\d+)').astype(int)
-    sondage_df['id_employee'] = sondage_df['code_sondage'].astype(str).str.replace('00000', '').astype(int)
+    eval_df['id_employee'] = eval_df['eval_number'].astype(str).str.extract(r'(\d+)').astype(int)
+    sondage_df['id_employee'] = sondage_df['code_sondage'].astype(str).str.extract(r'(\d+)').astype(int)
 
     # ÉTAPE 3: Merger les 3 datasets
     full_df = sirh_df.merge(eval_df, on='id_employee', how='inner')\
                      .merge(sondage_df, on='id_employee', how='inner')
+
+    # Si le merge ne donne aucun résultat, retourner un DataFrame vide
+    if full_df.empty:
+        return pd.DataFrame()
 
     # ÉTAPE 4: Normaliser le pourcentage
     full_df['augmentation_salaire_precedente'] = full_df['augmentation_salaire_precedente'].apply(

@@ -2,12 +2,12 @@ from fastapi import FastAPI, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import joblib
-from utils.preprocessing import load_data_from_postgres, preprocess_input, safe_log_transform, SafeLogTransform, preprocess_single_employee
+from app.utils.preprocessing import load_data_from_postgres, preprocess_input, safe_log_transform, SafeLogTransform, preprocess_single_employee
 import os
 from typing import Optional
 from sqlalchemy.orm import Session
-from database import get_db
-from models import Prediction
+from app.database import get_db
+from app.models import Prediction
 
 app = FastAPI(
     title="API Prédiction Turnover",
@@ -101,8 +101,8 @@ async def predict(db: Session = Depends(get_db)):
     try:
         eval_df, sirh_df, sondage_df = load_data_from_postgres(DATABASE_URL)
 
-        eval_df['id_employee'] = eval_df['eval_number'].astype(str).str.extract('(\d+)').astype(int)
-        sondage_df['id_employee'] = sondage_df['code_sondage'].astype(str).str.replace('00000', '').astype(int)
+        eval_df['id_employee'] = eval_df['eval_number'].astype(str).str.extract(r'(\d+)').astype(int)
+        sondage_df['id_employee'] = sondage_df['code_sondage'].astype(str).str.extract(r'(\d+)').astype(int)
 
         merged_df = sirh_df.merge(eval_df, on='id_employee', how='inner')\
                            .merge(sondage_df, on='id_employee', how='inner')
