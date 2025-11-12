@@ -6,8 +6,8 @@ from app.utils.preprocessing import load_data_from_postgres, preprocess_input, s
 import os
 from typing import Optional
 from sqlalchemy.orm import Session
-from database import get_db
-from models import Prediction
+from app.database import get_db
+from app.models import Prediction
 
 app = FastAPI(
     title="API Prédiction Turnover",
