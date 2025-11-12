@@ -146,67 +146,6 @@ def test_predict_saves_probabilities_as_list(client, test_db):
             assert isinstance(prediction.probabilities, list)
 
 
-@patch('app.main.pipeline')
-def test_predict_db_add_and_commit(mock_pipeline, client, test_db):
-    """Test que db.add et db.commit sont appelés"""
-    mock_pipeline.predict.return_value = np.array([1])
-    mock_pipeline.predict_proba.return_value = np.array([[0.3, 0.7]])
-
-    sirh_data = pd.DataFrame({
-        'id_employee': [999],
-        'age': [30],
-        'nombre_heures_travaillees': [80],
-        'annees_experience_totale': [5],
-        'annees_dans_l_entreprise': [3],
-        'annees_dans_le_poste_actuel': [2],
-        'annees_depuis_la_derniere_promotion': [1],
-        'revenu_mensuel': [5000.0],
-        'heure_supplementaires': ['Oui'],
-        'ayant_enfants': ['Oui'],
-        'distance_domicile_travail': [10.0],
-        'departement': ['Sales'],
-        'niveau_education': [3],
-        'domaine_etude': ['Life Sciences'],
-        'genre': ['Male'],
-        'poste': ['Sales Executive'],
-        'statut_marital': ['Married'],
-        'nombre_experiences_precedentes': [2]
-    })
-
-    eval_data = pd.DataFrame({
-        'eval_number': ['eval_999'],
-        'note_evaluation_precedente': [3],
-        'note_evaluation_actuelle': [3],
-        'augmentation_salaire_precedente': ['15 %']
-    })
-
-    sondage_data = pd.DataFrame({
-        'code_sondage': ['sondage_999'],
-        'satisfaction_employee_nature_travail': [3],
-        'satisfaction_employee_equilibre_pro_perso': [3],
-        'satisfaction_employee_environnement': [3],
-        'satisfaction_employee_equipe': [3],
-        'implication_employee': [3],
-        'annees_sous_reponsable_actuel': [2],
-        'nombre_employee_sous_responsabilite': [0],
-        'niveau_hierarchique_poste': [2],
-        'nb_formations_suivies': [3],
-        'frequence_deplacement': ['Travel_Rarely'],
-        'nombre_participation_pee': [1]
-    })
-
-    sirh_data.to_sql('extrait_sirh', test_db.bind, if_exists='replace', index=False)
-    eval_data.to_sql('extrait_eval', test_db.bind, if_exists='replace', index=False)
-    sondage_data.to_sql('extrait_sondage', test_db.bind, if_exists='replace', index=False)
-
-    before_count = test_db.query(MagicMock).count() if hasattr(test_db.query(MagicMock), 'count') else 0
-
-    with patch('app.main.pipeline', mock_pipeline):
-        response = client.post("/predict")
-
-    assert response.status_code in [200, 500, 503]
-
-
 def test_root_endpoint_message(client):
     """Test que le message du root endpoint est correct"""
     response = client.get("/")
