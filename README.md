@@ -22,7 +22,7 @@ pinned: false
   - `POSTGRES_USER` => Le nom de l'utilisateur postgres
   - `POSTGRES_PASSWORD` => Le mot de passe associé à l'utilisateur
   - `PGADMIN_DEFAULT_EMAIL` => Email utilisé pour la connexion à l'interface graphique pgAdmin
-  - `PGADMIN_DEFAULT_PASSWORD` => Mot de passe pour la connexion à l'interface graphique pgAdmin
+  - `PGADMIN_DEFAULT_PASSWORD` => Mot de passe pour la connexion à l'interface graphique pgAdmin.
 
 [FastApi-url]: https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi
 [GitHub-Actions]: https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white
