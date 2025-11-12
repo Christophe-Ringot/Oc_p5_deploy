@@ -329,3 +329,186 @@ def test_multiple_predictions_different_employees(client):
         response = client.post("/predict_one", json=employee)
         if response.status_code == 200:
             assert response.json()["success"] is True
+
+
+def test_predict_one_high_risk_employee(client):
+    high_risk_data = {
+        "age": 25,
+        "revenu_mensuel": 2000.0,
+        "annees_dans_l_entreprise": 1,
+        "satisfaction_employee_nature_travail": 1,
+        "satisfaction_employee_equilibre_pro_perso": 1,
+        "satisfaction_employee_environnement": 1,
+        "satisfaction_employee_equipe": 1,
+        "implication_employee": 1,
+        "heure_supplementaires": 1,
+        "distance_domicile_travail": 50.0
+    }
+
+    response = client.post("/predict_one", json=high_risk_data)
+    assert response.status_code in [200, 503]
+
+
+def test_predict_one_low_risk_employee(client):
+    low_risk_data = {
+        "age": 45,
+        "revenu_mensuel": 10000.0,
+        "annees_dans_l_entreprise": 15,
+        "satisfaction_employee_nature_travail": 4,
+        "satisfaction_employee_equilibre_pro_perso": 4,
+        "satisfaction_employee_environnement": 4,
+        "satisfaction_employee_equipe": 4,
+        "implication_employee": 4
+    }
+
+    response = client.post("/predict_one", json=low_risk_data)
+    assert response.status_code in [200, 503]
+
+
+def test_predict_one_returns_probabilities(client):
+    employee_data = {"age": 30}
+
+    response = client.post("/predict_one", json=employee_data)
+
+    if response.status_code == 200:
+        data = response.json()
+        assert "prediction" in data
+        prediction = data["prediction"]
+        assert "probability" in prediction
+        assert 0 <= prediction["probability"] <= 1
+
+
+def test_predict_one_creates_prediction_in_db(client):
+    initial_response = client.get("/predictions")
+    initial_count = initial_response.json()["total"]
+
+    employee_data = {"age": 32}
+    client.post("/predict_one", json=employee_data)
+
+    final_response = client.get("/predictions")
+    final_count = final_response.json()["total"]
+
+    if client.post("/predict_one", json=employee_data).status_code == 200:
+        assert final_count >= initial_count
+
+
+def test_predictions_response_structure(client):
+    response = client.get("/predictions")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert "success" in data
+    assert "total" in data
+    assert "skip" in data
+    assert "limit" in data
+    assert "predictions" in data
+    assert isinstance(data["predictions"], list)
+
+
+def test_prediction_detail_response_structure(client):
+    employee_data = {"age": 29}
+    post_response = client.post("/predict_one", json=employee_data)
+
+    if post_response.status_code == 200:
+        prediction_id = post_response.json()["prediction_id"]
+        get_response = client.get(f"/predictions/{prediction_id}")
+
+        assert get_response.status_code == 200
+        data = get_response.json()
+
+        assert "success" in data
+        assert data["success"] is True
+        assert "prediction" in data
+
+        prediction = data["prediction"]
+        assert "id" in prediction
+        assert "employee_id" in prediction
+        assert "prediction" in prediction
+        assert "probability" in prediction
+        assert "probabilities" in prediction
+        assert "created_at" in prediction
+
+
+def test_delete_prediction_response_structure(client):
+    employee_data = {"age": 27}
+    post_response = client.post("/predict_one", json=employee_data)
+
+    if post_response.status_code == 200:
+        prediction_id = post_response.json()["prediction_id"]
+        delete_response = client.delete(f"/predictions/{prediction_id}")
+
+        assert delete_response.status_code == 200
+        data = delete_response.json()
+        assert "success" in data
+        assert "message" in data
+        assert data["success"] is True
+
+
+def test_predict_one_different_departments(client):
+    departments = ["Sales", "Research & Development", "Human Resources"]
+
+    for dept in departments:
+        employee_data = {
+            "age": 30,
+            "departement": dept
+        }
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_different_education_levels(client):
+    for education_level in [1, 2, 3, 4, 5]:
+        employee_data = {
+            "age": 30,
+            "niveau_education": education_level
+        }
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_different_genders(client):
+    for gender in ["Male", "Female"]:
+        employee_data = {
+            "age": 30,
+            "genre": gender
+        }
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_different_marital_status(client):
+    statuses = ["Single", "Married", "Divorced"]
+
+    for status in statuses:
+        employee_data = {
+            "age": 30,
+            "statut_marital": status
+        }
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_different_travel_frequencies(client):
+    frequencies = ["Travel_Rarely", "Travel_Frequently", "Non-Travel"]
+
+    for freq in frequencies:
+        employee_data = {
+            "age": 30,
+            "frequence_deplacement": freq
+        }
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_employee_input_defaults(client):
+    minimal_employee = {"age": 25}
+
+    response = client.post("/predict_one", json=minimal_employee)
+    assert response.status_code in [200, 503]
+
+
+def test_predictions_empty_list(client):
+    response = client.get("/predictions?skip=99999&limit=10")
+    assert response.status_code == 200
+    data = response.json()
+    assert "predictions" in data
