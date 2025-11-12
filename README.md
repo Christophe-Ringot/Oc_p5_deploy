@@ -1,3 +1,13 @@
+---
+title: OC P5 Deploy
+emoji: 🚀
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 # Déployez un modèle de Machine Learning
 
 ![Python][FastApi-url]![Github][GitHub-Actions]![Postgres][Postgres]![Docker][Docker]![Pytest][Pytest]![Swagger][Swagger]
