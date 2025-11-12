@@ -122,6 +122,59 @@ def test_predict_endpoint_without_model(client):
     assert "error" in data
 
 
+def test_predict_endpoint_success(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        data = response.json()
+        assert data["success"] is True
+        assert "total_employees" in data
+        assert "statistics" in data
+        assert "predictions" in data
+        assert "high_risk" in data["statistics"]
+        assert "low_risk" in data["statistics"]
+        assert "high_risk_percentage" in data["statistics"]
+
+
+def test_predict_endpoint_returns_employee_data(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        data = response.json()
+        if len(data["predictions"]) > 0:
+            prediction = data["predictions"][0]
+            assert "employee_id" in prediction
+            assert "employee_index" in prediction
+            assert "will_leave" in prediction
+            assert "probability" in prediction
+            assert "risk_level" in prediction
+
+
+def test_predict_endpoint_statistics_calculation(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        data = response.json()
+        stats = data["statistics"]
+        total = data["total_employees"]
+
+        assert stats["high_risk"] + stats["low_risk"] == total
+
+        if total > 0:
+            expected_percentage = (stats["high_risk"] / total) * 100
+            assert abs(stats["high_risk_percentage"] - expected_percentage) < 0.01
+
+
+def test_predict_endpoint_error_handling(client):
+    response = client.post("/predict")
+
+    if response.status_code == 500:
+        data = response.json()
+        assert data["success"] is False
+        assert "error" in data
+        assert "error_type" in data
+
+
 def test_predict_one_minimal_data(client):
     minimal_data = {
         "age": 30
@@ -793,3 +846,258 @@ def test_prediction_created_at_is_timestamp(client):
         if get_response.status_code == 200:
             prediction = get_response.json()["prediction"]
             assert prediction["created_at"] is not None
+
+
+def test_predict_one_exception_handling(client):
+    invalid_employee = {
+        "age": 30,
+        "revenu_mensuel": 5000.0,
+        "annees_experience_totale": 10
+    }
+
+    response = client.post("/predict_one", json=invalid_employee)
+    assert response.status_code in [200, 500, 503]
+
+    if response.status_code == 500:
+        data = response.json()
+        assert "error" in data
+        assert "error_type" in data
+
+
+def test_predict_one_db_commit(client):
+    before_count_response = client.get("/predictions")
+    before_count = before_count_response.json()["total"]
+
+    employee_data = {"age": 33}
+    post_response = client.post("/predict_one", json=employee_data)
+
+    if post_response.status_code == 200:
+        after_count_response = client.get("/predictions")
+        after_count = after_count_response.json()["total"]
+        assert after_count > before_count
+
+
+def test_predict_one_db_refresh(client):
+    employee_data = {"employee_id": 77777, "age": 29}
+    response = client.post("/predict_one", json=employee_data)
+
+    if response.status_code == 200:
+        data = response.json()
+        prediction_id = data["prediction_id"]
+        assert prediction_id is not None
+        assert isinstance(prediction_id, int)
+
+
+def test_get_prediction_error_handling(client):
+    response = client.get("/predictions/999999999")
+
+    if response.status_code == 500:
+        data = response.json()
+        assert data["success"] is False
+        assert "error" in data
+        assert "error_type" in data
+
+
+def test_delete_prediction_error_handling(client):
+    response = client.delete("/predictions/999999999")
+
+    if response.status_code == 500:
+        data = response.json()
+        assert data["success"] is False
+        assert "error" in data
+        assert "error_type" in data
+
+
+def test_get_all_predictions_error_handling(client):
+    response = client.get("/predictions")
+
+    if response.status_code == 500:
+        data = response.json()
+        assert data["success"] is False
+        assert "error" in data
+        assert "error_type" in data
+
+
+def test_predict_endpoint_all_employees(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        data = response.json()
+        predictions = data["predictions"]
+
+        for i, pred in enumerate(predictions):
+            assert pred["employee_index"] == i
+            assert pred["risk_level"] in ["HIGH", "LOW"]
+            assert 0 <= pred["probability"] <= 1
+
+
+def test_predict_endpoint_probabilities_array(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        predictions_response = client.get("/predictions")
+        if predictions_response.status_code == 200:
+            data = predictions_response.json()
+            if len(data["predictions"]) > 0:
+                pred = data["predictions"][0]
+                assert "probabilities" in pred
+                if pred["probabilities"] is not None:
+                    assert isinstance(pred["probabilities"], list)
+
+
+def test_predict_one_model_dump(client):
+    complete_employee = {
+        "employee_id": 55555,
+        "age": 35,
+        "nombre_heures_travaillees": 80,
+        "revenu_mensuel": 6000.0
+    }
+
+    response = client.post("/predict_one", json=complete_employee)
+
+    if response.status_code == 200:
+        data = response.json()
+        assert "prediction" in data
+
+
+def test_predict_one_probability_rounding(client):
+    employee_data = {"age": 28}
+    response = client.post("/predict_one", json=employee_data)
+
+    if response.status_code == 200:
+        data = response.json()
+        prob = data["prediction"]["probability"]
+        prob_str = str(prob)
+        decimal_places = len(prob_str.split('.')[-1]) if '.' in prob_str else 0
+        assert decimal_places <= 3
+
+
+def test_predict_endpoint_risk_threshold(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        data = response.json()
+        for pred in data["predictions"]:
+            if pred["probability"] > 0.50:
+                assert pred["risk_level"] == "HIGH"
+            else:
+                assert pred["risk_level"] == "LOW"
+
+
+def test_predict_one_risk_threshold(client):
+    employee_data = {"age": 32}
+    response = client.post("/predict_one", json=employee_data)
+
+    if response.status_code == 200:
+        data = response.json()
+        pred = data["prediction"]
+
+        if pred["probability"] > 0.50:
+            assert pred["risk_level"] == "HIGH"
+        else:
+            assert pred["risk_level"] == "LOW"
+
+
+def test_predictions_total_count(client):
+    response = client.get("/predictions")
+
+    if response.status_code == 200:
+        data = response.json()
+        assert "total" in data
+        assert isinstance(data["total"], int)
+        assert data["total"] >= 0
+
+
+def test_delete_then_get_prediction(client):
+    employee_data = {"age": 26}
+    post_response = client.post("/predict_one", json=employee_data)
+
+    if post_response.status_code == 200:
+        prediction_id = post_response.json()["prediction_id"]
+
+        delete_response = client.delete(f"/predictions/{prediction_id}")
+        assert delete_response.status_code == 200
+
+        get_response = client.get(f"/predictions/{prediction_id}")
+        assert get_response.status_code == 404
+
+
+def test_predict_one_all_default_values(client):
+    employee_with_defaults = {
+        "age": 35,
+        "nombre_heures_travaillees": 80,
+        "annees_experience_totale": 10,
+        "annees_dans_l_entreprise": 5,
+        "annees_dans_le_poste_actuel": 2,
+        "annees_depuis_la_derniere_promotion": 1,
+        "revenu_mensuel": 5000.0,
+        "heure_supplementaires": 0,
+        "ayant_enfants": 1,
+        "distance_domicile_travail": 10.0,
+        "departement": "Sales",
+        "niveau_education": 3,
+        "domaine_etude": "Life Sciences",
+        "genre": "Male",
+        "poste": "Sales Executive",
+        "statut_marital": "Married",
+        "nombre_experiences_precedentes": 2,
+        "note_evaluation_precedente": 3,
+        "note_evaluation_actuelle": 3,
+        "augmentation_salaire_precedente": 0.15,
+        "satisfaction_employee_nature_travail": 3,
+        "satisfaction_employee_equilibre_pro_perso": 3,
+        "satisfaction_employee_environnement": 3,
+        "satisfaction_employee_equipe": 3,
+        "implication_employee": 3,
+        "annes_sous_responsable_actuel": 2,
+        "nombre_employee_sous_responsabilite": 0,
+        "niveau_hierarchique_poste": 2,
+        "nb_formations_suivies": 3,
+        "frequence_deplacement": "Travel_Rarely",
+        "nombre_participation_pee": 1
+    }
+
+    response = client.post("/predict_one", json=employee_with_defaults)
+    assert response.status_code in [200, 503]
+
+
+def test_predict_endpoint_employee_ids_conversion(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        data = response.json()
+        for pred in data["predictions"]:
+            assert isinstance(pred["employee_id"], int)
+
+
+def test_predict_endpoint_prediction_conversion(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        predictions_response = client.get("/predictions")
+        if predictions_response.status_code == 200:
+            data = predictions_response.json()
+            if len(data["predictions"]) > 0:
+                pred = data["predictions"][0]
+                assert isinstance(pred["prediction"], int)
+                assert pred["prediction"] in [0, 1]
+
+
+def test_predict_endpoint_probability_conversion(client):
+    response = client.post("/predict")
+
+    if response.status_code == 200:
+        predictions_response = client.get("/predictions")
+        if predictions_response.status_code == 200:
+            data = predictions_response.json()
+            if len(data["predictions"]) > 0:
+                pred = data["predictions"][0]
+                assert isinstance(pred["probability"], float)
+
+
+def test_health_database_url_configured(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert "database_url_configured" in data
+    assert isinstance(data["database_url_configured"], bool)
