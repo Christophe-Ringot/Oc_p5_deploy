@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import joblib
-from utils.preprocessing import load_data_from_postgres, preprocess_input, safe_log_transform, SafeLogTransform, preprocess_single_employee
+from app.utils.preprocessing import load_data_from_***, preprocess_input, safe_log_transform, SafeLogTransform, preprocess_single_employee
 import os
 from typing import Optional
 from sqlalchemy.orm import Session
