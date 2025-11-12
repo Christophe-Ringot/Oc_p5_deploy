@@ -6,20 +6,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Utiliser SQLite pour Hugging Face Spaces, PostgreSQL en local/CI
-if os.getenv("SPACE_ID"):
+# Utiliser SQLite si les variables PostgreSQL ne sont pas définies (Hugging Face)
+DB_PORT = os.getenv('DB_PORT')
+if DB_PORT is None:
+    # Pas de PostgreSQL configuré, utiliser SQLite
     connection_string = "sqlite:///./app.db"
 else:
+    # PostgreSQL configuré (local/CI)
     DB_USER = os.getenv('POSTGRES_USER')
     DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
     DB_HOST = os.getenv('DB_HOST')
-    DB_PORT = int(os.getenv('DB_PORT'))
+    DB_PORT = int(DB_PORT)
     DB_NAME = os.getenv('DB_NAME')
     connection_string = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
 def create_database():
     try:
-        if os.getenv("SPACE_ID"):
+        if "sqlite" in connection_string:
             engine = create_engine(connection_string, connect_args={"check_same_thread": False})
         else:
             engine = create_engine(connection_string)
