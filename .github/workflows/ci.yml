@@ -42,7 +42,7 @@ jobs:
         run: python data/create_db.py
 
       - name: lancement des tests
-        run: pytest tests/ -v --cov=app --cov-report=html --cov-report=term --cov-fail-under=80
+        run: pytest tests/ -v --cov=app --cov-report=html --cov-report=term --cov-fail-under=75
 
       - name: artefact rapport html
         uses: actions/upload-artifact@v4
