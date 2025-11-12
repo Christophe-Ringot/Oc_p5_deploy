@@ -12,7 +12,7 @@ pinned: false
 
 ![Python][FastApi-url]![Github][GitHub-Actions]![Postgres][Postgres]![Docker][Docker]![Pytest][Pytest]![Swagger][Swagger]
 
-API REST développée avec FastAPI pour prédire le risque de départ des employés d'une entreprise. Le modèle de machine learning analyse divers facteurs (satisfaction, salaire, expérience, etc.) pour identifier les employés à risque de quitter l'entreprise.
+API REST développée avec FastAPI pour prédire le risque de départ des employés d'une entreprise. Le modèle de machine learning analyse divers facteurs (satisfaction, salaire, expérience, etc.) pour identifier les employés à risque de quitter l'entreprise
 
 ## Sommaire
 
