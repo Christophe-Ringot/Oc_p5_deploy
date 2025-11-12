@@ -512,3 +512,284 @@ def test_predictions_empty_list(client):
     assert response.status_code == 200
     data = response.json()
     assert "predictions" in data
+
+
+def test_predict_one_with_employee_id_none(client):
+    employee_data = {
+        "employee_id": None,
+        "age": 30
+    }
+
+    response = client.post("/predict_one", json=employee_data)
+    assert response.status_code in [200, 503]
+
+
+def test_predict_one_probability_bounds(client):
+    employee_data = {"age": 40}
+
+    response = client.post("/predict_one", json=employee_data)
+
+    if response.status_code == 200:
+        data = response.json()
+        prob = data["prediction"]["probability"]
+        assert prob >= 0
+        assert prob <= 1
+        assert isinstance(prob, float)
+
+
+def test_predict_one_will_leave_boolean(client):
+    employee_data = {"age": 35}
+
+    response = client.post("/predict_one", json=employee_data)
+
+    if response.status_code == 200:
+        data = response.json()
+        will_leave = data["prediction"]["will_leave"]
+        assert isinstance(will_leave, bool)
+
+
+def test_predict_one_risk_level_values(client):
+    employee_data = {"age": 28}
+
+    response = client.post("/predict_one", json=employee_data)
+
+    if response.status_code == 200:
+        data = response.json()
+        risk_level = data["prediction"]["risk_level"]
+        assert risk_level in ["HIGH", "LOW"]
+
+
+def test_get_all_predictions_default_pagination(client):
+    response = client.get("/predictions")
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["skip"] == 0
+    assert data["limit"] == 100
+
+
+def test_predict_one_all_satisfaction_levels(client):
+    for satisfaction in [1, 2, 3, 4]:
+        employee_data = {
+            "age": 30,
+            "satisfaction_employee_nature_travail": satisfaction,
+            "satisfaction_employee_equilibre_pro_perso": satisfaction,
+            "satisfaction_employee_environnement": satisfaction,
+            "satisfaction_employee_equipe": satisfaction,
+            "implication_employee": satisfaction
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_all_evaluation_scores(client):
+    for score in [1, 2, 3, 4]:
+        employee_data = {
+            "age": 30,
+            "note_evaluation_precedente": score,
+            "note_evaluation_actuelle": score
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_various_experiences(client):
+    experiences = [
+        {"annees_experience_totale": 0, "annees_dans_l_entreprise": 0},
+        {"annees_experience_totale": 5, "annees_dans_l_entreprise": 3},
+        {"annees_experience_totale": 20, "annees_dans_l_entreprise": 15}
+    ]
+
+    for exp in experiences:
+        employee_data = {
+            "age": 30,
+            **exp
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_with_overtime(client):
+    for overtime in [0, 1]:
+        employee_data = {
+            "age": 30,
+            "heure_supplementaires": overtime
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_with_children(client):
+    for children in [0, 1, 2, 3, 4, 5]:
+        employee_data = {
+            "age": 30,
+            "ayant_enfants": children
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_various_distances(client):
+    distances = [0.5, 5.0, 10.0, 25.0, 50.0, 100.0]
+
+    for distance in distances:
+        employee_data = {
+            "age": 30,
+            "distance_domicile_travail": distance
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_various_salaries(client):
+    salaries = [1000.0, 3000.0, 5000.0, 8000.0, 15000.0]
+
+    for salary in salaries:
+        employee_data = {
+            "age": 30,
+            "revenu_mensuel": salary
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_various_work_hours(client):
+    hours = [40, 80, 120, 160, 200]
+
+    for hour in hours:
+        employee_data = {
+            "age": 30,
+            "nombre_heures_travaillees": hour
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_various_hierarchical_levels(client):
+    for level in [1, 2, 3, 4, 5]:
+        employee_data = {
+            "age": 30,
+            "niveau_hierarchique_poste": level
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_various_training_counts(client):
+    for training in [0, 1, 3, 5, 6]:
+        employee_data = {
+            "age": 30,
+            "nb_formations_suivies": training
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_various_stock_participation(client):
+    for participation in [0, 1, 2, 3, 4, 5]:
+        employee_data = {
+            "age": 30,
+            "nombre_participation_pee": participation
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_all_study_fields(client):
+    fields = ["Life Sciences", "Medical", "Marketing", "Technical Degree", "Other", "Human Resources"]
+
+    for field in fields:
+        employee_data = {
+            "age": 30,
+            "domaine_etude": field
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_all_job_positions(client):
+    positions = [
+        "Sales Executive",
+        "Research Scientist",
+        "Laboratory Technician",
+        "Manufacturing Director",
+        "Healthcare Representative",
+        "Manager",
+        "Sales Representative",
+        "Research Director",
+        "Human Resources"
+    ]
+
+    for position in positions:
+        employee_data = {
+            "age": 30,
+            "poste": position
+        }
+
+        response = client.post("/predict_one", json=employee_data)
+        assert response.status_code in [200, 503]
+
+
+def test_predict_one_response_has_prediction_id(client):
+    employee_data = {"age": 31}
+
+    response = client.post("/predict_one", json=employee_data)
+
+    if response.status_code == 200:
+        data = response.json()
+        assert "prediction_id" in data
+        assert isinstance(data["prediction_id"], int)
+
+
+def test_health_status_healthy_when_model_loaded(client):
+    response = client.get("/health")
+    data = response.json()
+
+    if data["model_loaded"]:
+        assert data["status"] == "healthy"
+
+
+def test_health_status_unhealthy_when_model_not_loaded(client):
+    response = client.get("/health")
+    data = response.json()
+
+    if not data["model_loaded"]:
+        assert data["status"] == "unhealthy"
+
+
+def test_predictions_list_contains_employee_ids(client):
+    employee_data = {"employee_id": 99999, "age": 30}
+    post_response = client.post("/predict_one", json=employee_data)
+
+    if post_response.status_code == 200:
+        predictions_response = client.get("/predictions")
+        data = predictions_response.json()
+
+        if data["total"] > 0:
+            first_prediction = data["predictions"][0]
+            assert "employee_id" in first_prediction
+
+
+def test_prediction_created_at_is_timestamp(client):
+    employee_data = {"age": 30}
+    post_response = client.post("/predict_one", json=employee_data)
+
+    if post_response.status_code == 200:
+        prediction_id = post_response.json()["prediction_id"]
+        get_response = client.get(f"/predictions/{prediction_id}")
+
+        if get_response.status_code == 200:
+            prediction = get_response.json()["prediction"]
+            assert prediction["created_at"] is not None
