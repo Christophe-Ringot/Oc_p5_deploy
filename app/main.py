@@ -6,7 +6,7 @@ from app.utils.preprocessing import load_data_from_postgres, preprocess_input, s
 import os
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.database import get_db
+from app.database import get_db, engine, Base
 from app.models import Prediction
 
 app = FastAPI(
@@ -14,6 +14,9 @@ app = FastAPI(
     description="API pour prédire si des employés vont quitter l'entreprise",
     version="1.0.0"
 )
+
+# Créer les tables au démarrage
+Base.metadata.create_all(bind=engine)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
