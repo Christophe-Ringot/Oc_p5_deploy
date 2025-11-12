@@ -68,7 +68,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
           git clone https://user:$HF_TOKEN@huggingface.co/spaces/christophe-ringot/Oc_P5 hf-space
-          rsync -av --exclude='hf-space' --exclude='.git' --exclude='assets/img/diagramme.png' . hf-space/
+          rsync -av --exclude='hf-space' --exclude='.git' --exclude='assets/img/diagramme.png' --exclude='.env' --exclude='.env.local' . hf-space/
           cd hf-space
           git add .
           git commit -m "Deploy from GitHub Actions" || echo "No changes"
