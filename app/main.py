@@ -4,10 +4,14 @@ from pydantic import BaseModel
 import joblib
 from app.utils.preprocessing import load_data_from_postgres, preprocess_input, safe_log_transform, SafeLogTransform, preprocess_single_employee
 import os
+import sys
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.database import get_db, engine, Base
 from app.models import Prediction
+
+# Créer un alias pour safe_log_transform dans __main__ pour la désérialisation du modèle
+sys.modules['__main__'].safe_log_transform = safe_log_transform
 
 app = FastAPI(
     title="API Prédiction Turnover",
@@ -23,6 +27,11 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 try:
     model_path = os.path.join(os.path.dirname(__file__), 'model', 'full_pipeline.joblib')
+    print(f"Tentative de chargement du modèle depuis: {model_path}")
+    print(f"Le fichier existe: {os.path.exists(model_path)}")
+    if os.path.exists(model_path):
+        file_size = os.path.getsize(model_path)
+        print(f"Taille du fichier: {file_size} bytes")
     pipeline = joblib.load(model_path)
     print("Pipeline chargé avec succès")
 except Exception as e:

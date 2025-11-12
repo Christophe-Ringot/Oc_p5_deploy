@@ -3,6 +3,9 @@
 
 FROM python:3.12
 
+# Install Git LFS for model files
+RUN apt-get update && apt-get install -y git-lfs && git lfs install && rm -rf /var/lib/apt/lists/*
+
 # The two following lines are requirements for the Dev Mode to be functional
 # Learn more about the Dev Mode at https://huggingface.co/dev-mode-explorers
 RUN useradd -m -u 1000 user
