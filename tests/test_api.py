@@ -3,12 +3,10 @@ from fastapi.testclient import TestClient
 
 
 def test_root_endpoint(client):
-    response = client.get("/")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["message"] == "API de prédiction de turnover"
-    assert data["version"] == "1.0.0"
-    assert "endpoints" in data
+    """Test que le root endpoint redirige vers /docs"""
+    response = client.get("/", follow_redirects=False)
+    assert response.status_code == 307  # Redirection temporaire
+    assert response.headers["location"] == "/docs"
 
 
 def test_health_endpoint(client):
@@ -192,8 +190,8 @@ def test_predict_one_minimal_data(client):
 
 
 def test_endpoints_return_json(client):
+    """Test que les endpoints JSON retournent bien du JSON"""
     endpoints = [
-        ("/", "get"),
         ("/health", "get"),
         ("/predictions", "get"),
     ]
@@ -349,14 +347,21 @@ def test_health_endpoint_details(client):
 
 
 def test_root_endpoint_has_all_routes(client):
-    response = client.get("/")
+    """Test que les routes principales sont disponibles en vérifiant /docs"""
+    # Vérifier que la redirection vers /docs fonctionne
+    response = client.get("/", follow_redirects=True)
     assert response.status_code == 200
-    data = response.json()
 
-    expected_endpoints = ["predict", "predict_one", "predictions", "prediction_by_id", "delete_prediction", "health", "docs"]
+    # Vérifier que les endpoints existent en les testant directement
+    endpoints_to_check = [
+        ("/health", "get", [200]),
+        ("/predictions", "get", [200]),
+    ]
 
-    for endpoint in expected_endpoints:
-        assert endpoint in data["endpoints"]
+    for path, method, expected_codes in endpoints_to_check:
+        if method == "get":
+            test_response = client.get(path)
+            assert test_response.status_code in expected_codes
 
 
 def test_predict_one_edge_case_values(client):

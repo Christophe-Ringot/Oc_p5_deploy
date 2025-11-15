@@ -147,12 +147,10 @@ def test_predict_saves_probabilities_as_list(client, test_db):
 
 
 def test_root_endpoint_message(client):
-    """Test que le message du root endpoint est correct"""
-    response = client.get("/")
-    data = response.json()
-
-    assert data["message"] == "API de prédiction de turnover"
-    assert data["version"] == "1.0.0"
+    """Test que le root endpoint redirige vers /docs"""
+    response = client.get("/", follow_redirects=False)
+    assert response.status_code == 307  # Redirection temporaire
+    assert response.headers["location"] == "/docs"
 
 
 def test_health_endpoint_all_fields(client):
