@@ -228,3 +228,11 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# SQLite database files
+*.db
+*.sqlite
+app.db
+
+# Docker
+docker-compose.override.yml

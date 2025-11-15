@@ -8,6 +8,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - local_pgdata:/var/lib/postgresql/data
     networks:
@@ -16,6 +17,37 @@ services:
       - no-new-privileges:true
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: turnover_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+    volumes:
+      - ./app:/app/app
+      - ./data:/app/data
+    networks:
+      - bdd-network
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   pgadmin:
     depends_on:

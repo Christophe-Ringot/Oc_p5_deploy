@@ -69,11 +69,32 @@ source env/bin/activate  # Sur Windows: env\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Installation avec Docker
+### Installation avec Docker (Recommandé)
 
+**Démarrage rapide:**
+
+Sur Windows:
 ```bash
+start-local.bat
+```
+
+Sur Linux/Mac:
+```bash
+chmod +x start-local.sh
+./start-local.sh
+```
+
+Ou manuellement:
+```bash
+# Copier et configurer les variables d'environnement
+cp .env.example .env
+# Éditer .env avec vos valeurs
+
+# Démarrer tous les services (PostgreSQL + API + PgAdmin)
 docker-compose up -d
 ```
+
+📖 **Pour plus de détails**, consultez le [Guide Docker Compose](DOCKER.md)
 
 ## Documentation
 
@@ -126,14 +147,20 @@ PGADMIN_DEFAULT_PASSWORD=admin
 
 ### Initialisation de la base de données
 
-```bash
-python data/create_db.py
-```
+**Automatique au démarrage:**
 
-Cette commande va :
+L'application initialise automatiquement la base de données au démarrage (voir `app/main.py` `startup_event`):
+- Création des tables nécessaires
+- Chargement des données CSV (`extrait_sirh.csv`, `extrait_eval.csv`, `extrait_sondage.csv`)
 
-- Créer les tables nécessaires
-- Charger les données depuis les fichiers CSV (`extrait_sirh.csv`, `extrait_eval.csv`, `extrait_sondage.csv`)
+**Configuration automatique:**
+
+L'application détecte automatiquement l'environnement:
+- **Hugging Face Spaces** → SQLite (détecté via `SPACE_ID`)
+- **Local/CI avec PostgreSQL configuré** → PostgreSQL
+- **Par défaut** → SQLite
+
+📖 **Pour plus de détails**, consultez le [Guide de déploiement](DEPLOYMENT.md)
 
 ## Lancement de l'application
 
