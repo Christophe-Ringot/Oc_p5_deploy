@@ -7,8 +7,9 @@ import os
 import sys
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.database import get_db, engine, Base
+from app.database import get_db
 from app.models import Prediction
+from fastapi.responses import RedirectResponse
 
 # Créer un alias pour safe_log_transform dans __main__ pour la désérialisation du modèle
 sys.modules['__main__'].safe_log_transform = safe_log_transform
@@ -19,8 +20,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Créer les tables au démarrage
-Base.metadata.create_all(bind=engine)
+# Initialiser la base de données au démarrage
+@app.on_event("startup")
+async def startup_event():
+    from app.init_db import init_database
+    try:
+        print("Initialisation de la base de données...")
+        init_database()
+    except Exception as e:
+        print(f"Avertissement: Impossible d'initialiser la base de données: {e}")
+        print("L'application démarre quand même, mais certains endpoints peuvent ne pas fonctionner.")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -76,19 +85,7 @@ class EmployeeInput(BaseModel):
 
 @app.get("/")
 async def root():
-    return {
-        "message": "API de prédiction de turnover",
-        "version": "1.0.0",
-        "endpoints": {
-            "predict": "POST /predict - Prédire le turnover pour tous les employés en BDD",
-            "predict_one": "POST /predict_one - Prédire le turnover pour un employé via input",
-            "predictions": "GET /predictions - Récupérer toutes les prédictions enregistrées",
-            "prediction_by_id": "GET /predictions/{id} - Récupérer une prédiction par ID",
-            "delete_prediction": "DELETE /predictions/{id} - Supprimer une prédiction",
-            "health": "GET /health - Vérifier l'état de l'API",
-            "docs": "GET /docs - Documentation interactive"
-        }
-    }
+    return RedirectResponse(url="/docs")
 
 @app.get("/health")
 async def health():

@@ -19,6 +19,7 @@ API REST développée avec FastAPI pour prédire le risque de départ des employ
 - [Fonctionnalités](#fonctionnalités)
 - [Prérequis](#prérequis)
 - [Installation](#installation)
+- [Documentation](#documentation)
 - [Configuration](#configuration)
 - [Lancement de l'application](#lancement-de-lapplication)
 - [Endpoints de l'API](#endpoints-de-lapi)
@@ -73,6 +74,36 @@ pip install -r requirements.txt
 ```bash
 docker-compose up -d
 ```
+
+## Documentation
+
+### Documentation technique complète
+
+Une documentation technique détaillée est disponible au format HTML avec Sphinx.
+
+**Pour y accéder** :
+
+1. Ouvrez le fichier `docs/build/index.html` dans votre navigateur
+
+Ou
+
+2. Lancez un serveur web :
+   ```bash
+   cd docs/build
+   python -m http.server 8080
+   ```
+   Puis ouvrez http://localhost:8080
+
+**Contenu de la documentation** :
+
+- **Introduction** : Contexte, objectifs et modèle ML
+- **Installation** : Guide d'installation détaillé avec résolution de problèmes
+- **Référence API** : Documentation complète de tous les endpoints
+  - Descriptions détaillées
+  - Paramètres et schémas de données
+  - Exemples avec cURL, Python, JavaScript
+  - Codes d'erreur et gestion
+  - Format EmployeeInput avec 30+ champs
 
 ## Configuration
 
@@ -134,6 +165,8 @@ Une fois l'application lancée, accédez à la documentation Swagger :
 - ReDoc : `http://localhost:8000/redoc`
 
 ## Endpoints de l'API
+
+> 📖 **Documentation technique complète** : Pour une documentation détaillée de tous les endpoints avec exemples complets (cURL, Python, JavaScript), consultez la [documentation technique](docs/build/index.html) (ouvrir dans votre navigateur).
 
 ### Root
 

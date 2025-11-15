@@ -205,3 +205,26 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Sphinx cache (mais on garde build/ pour la doc HTML)
+source/.doctrees
+.doctrees/
+build/.doctrees/
+build/.buildinfo
+
+# Compiled Python files
+*.pyc
+__pycache__/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.swp
+*.swo
+*~
