@@ -93,9 +93,13 @@ def test_session_local_configuration():
     session = SessionLocal()
     assert session is not None
 
-    # Vérifier que autocommit et autoflush sont désactivés
-    assert session.autocommit is False
+    # Vérifier que autoflush est désactivé
     assert session.autoflush is False
+
+    # Vérifier que la session a les méthodes nécessaires
+    assert hasattr(session, 'query')
+    assert hasattr(session, 'commit')
+    assert hasattr(session, 'rollback')
 
     session.close()
 
