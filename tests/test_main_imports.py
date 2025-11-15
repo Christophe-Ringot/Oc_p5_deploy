@@ -5,7 +5,7 @@ import asyncio
 
 
 def test_main_module_imports():
-    from app.main import app, pipeline, EmployeeInput, DATABASE_URL
+    from app.main import app, pipeline, EmployeeInput
 
     assert app is not None
     assert app.title == "API Prédiction Turnover"
@@ -80,10 +80,13 @@ def test_employee_input_custom_values():
     assert employee.genre == "Female"
 
 
-def test_database_url_environment_variable():
-    from app.main import DATABASE_URL
+def test_database_url_from_database_module():
+    """Test que DATABASE_URL est importé du module database"""
+    from app.database import DATABASE_URL
 
-    assert DATABASE_URL is not None or DATABASE_URL is None
+    assert DATABASE_URL is not None
+    # Vérifier que c'est soit sqlite soit postgresql
+    assert "sqlite" in DATABASE_URL.lower() or "postgresql" in DATABASE_URL.lower()
 
 
 def test_pipeline_loading_attempt():

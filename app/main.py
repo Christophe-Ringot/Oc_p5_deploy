@@ -7,7 +7,7 @@ import os
 import sys
 from typing import Optional
 from sqlalchemy.orm import Session
-from app.database import get_db
+from app.database import get_db, DATABASE_URL
 from app.models import Prediction
 from fastapi.responses import RedirectResponse
 
@@ -30,8 +30,6 @@ async def startup_event():
     except Exception as e:
         print(f"Avertissement: Impossible d'initialiser la base de données: {e}")
         print("L'application démarre quand même, mais certains endpoints peuvent ne pas fonctionner.")
-
-DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 try:
