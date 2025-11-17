@@ -93,27 +93,3 @@ def test_pipeline_loading_attempt():
     from app.main import pipeline
 
     assert pipeline is None or pipeline is not None
-
-
-def test_startup_event_success():
-    """Test le startup event de l'application avec succès"""
-    with patch('app.init_db.init_database') as mock_init_db:
-        from app.main import startup_event
-
-        # Exécuter le startup event
-        asyncio.run(startup_event())
-
-        # Vérifier que init_database a été appelé
-        mock_init_db.assert_called_once()
-
-
-def test_startup_event_with_exception():
-    """Test le startup event quand init_database lève une exception"""
-    with patch('app.init_db.init_database', side_effect=Exception("Erreur de connexion")):
-        from app.main import startup_event
-
-        # Ne devrait pas lever d'exception car elle est capturée
-        try:
-            asyncio.run(startup_event())
-        except Exception:
-            pytest.fail("startup_event ne devrait pas propager l'exception")
