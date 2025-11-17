@@ -10,19 +10,14 @@ from sqlalchemy.orm import Session
 from app.database import get_db, DATABASE_URL
 from app.models import Prediction
 from fastapi.responses import RedirectResponse
+from contextlib import asynccontextmanager
 
 # Créer un alias pour safe_log_transform dans __main__ pour la désérialisation du modèle
 sys.modules['__main__'].safe_log_transform = safe_log_transform
 
-app = FastAPI(
-    title="API Prédiction Turnover",
-    description="API pour prédire si des employés vont quitter l'entreprise",
-    version="1.0.0"
-)
-
-# Initialiser la base de données au démarrage
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
     from app.init_db import init_database
     try:
         print("Initialisation de la base de données...")
@@ -30,6 +25,15 @@ async def startup_event():
     except Exception as e:
         print(f"Avertissement: Impossible d'initialiser la base de données: {e}")
         print("L'application démarre quand même, mais certains endpoints peuvent ne pas fonctionner.")
+    yield
+    # Shutdown (si nécessaire)
+
+app = FastAPI(
+    title="API Prédiction Turnover",
+    description="API pour prédire si des employés vont quitter l'entreprise",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 
 try:

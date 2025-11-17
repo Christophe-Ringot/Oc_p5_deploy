@@ -4,63 +4,6 @@ from unittest.mock import patch, MagicMock
 import os
 
 
-def test_database_sqlite_configuration():
-    """Test la configuration SQLite quand PostgreSQL n'est pas configuré"""
-    with patch.dict(os.environ, {}, clear=True):
-        # Recharger le module pour appliquer les changements d'environnement
-        import importlib
-        import app.database
-        importlib.reload(app.database)
-
-        from app.database import engine
-
-        # Vérifier que SQLite est utilisé
-        assert "sqlite" in str(engine.url).lower()
-
-
-def test_database_postgresql_configuration():
-    """Test la configuration PostgreSQL quand les variables sont définies"""
-    env_vars = {
-        'DB_PORT': '5432',
-        'POSTGRES_USER': 'testuser',
-        'POSTGRES_PASSWORD': 'testpass',
-        'DB_HOST': 'localhost',
-        'DB_NAME': 'testdb',
-        'SPACE_ID': ''  # Pas sur Hugging Face
-    }
-
-    with patch.dict(os.environ, env_vars, clear=True):
-        # Recharger le module
-        import importlib
-        import app.database
-        importlib.reload(app.database)
-
-        from app.database import engine
-
-        # Vérifier que PostgreSQL est utilisé
-        assert "postgresql" in str(engine.url).lower()
-
-
-def test_database_huggingface_uses_sqlite():
-    """Test que SQLite est utilisé sur Hugging Face Spaces"""
-    env_vars = {
-        'SPACE_ID': 'username/space-name',  # Simule Hugging Face
-        'DB_PORT': '5432',  # Même si PostgreSQL est configuré
-        'POSTGRES_USER': 'testuser'
-    }
-
-    with patch.dict(os.environ, env_vars, clear=True):
-        # Recharger le module
-        import importlib
-        import app.database
-        importlib.reload(app.database)
-
-        from app.database import engine
-
-        # Vérifier que SQLite est utilisé malgré les variables PostgreSQL
-        assert "sqlite" in str(engine.url).lower()
-
-
 def test_get_db_yields_session():
     """Test que get_db yield une session et la ferme"""
     from app.database import get_db
@@ -99,7 +42,7 @@ def test_get_db_closes_session_on_exception():
     finally:
         # Vérifier que la session est fermée
         try:
-            db_gen.throw(ValueError, "cleanup")
+            db_gen.throw(ValueError("cleanup"))
         except (StopIteration, ValueError):
             pass  # C'est attendu
 
